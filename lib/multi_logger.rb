@@ -9,7 +9,7 @@ module MultiLogger
       if rails_logger_class.method_defined?(name)
         raise "'#{name}' is reserved in #{rails_logger_class} and can not be used as a log accessor name."
       else
-        logger = Logger.new(*logger_argument(options))
+        logger = Logger.new(*logger_argument(name, options))
         rails_logger_class.class_eval do
           define_method name.to_sym do
             logger
@@ -27,12 +27,13 @@ module MultiLogger
       if path.nil?
         path = name.underscore
       end
-      if !path.include?('/')
+      unless path.include?('/')
         path = Rails.root.join('log',path).to_s
       end
-      if !path.end_with?('.log')
+      unless path.end_with?('.log')
         path += '.log'
       end
+      path
     end
 
     def get_rails_logger_class
@@ -45,7 +46,7 @@ module MultiLogger
       end
     end
 
-    def logger_argument(options)
+    def logger_argument(name, options)
       if options[:shift_age] && options[:shift_size]
         [get_path(name, options[:path]), options[:shift_age], options[:shift_size]]
       elsif options[:shift_age]
